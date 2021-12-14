@@ -22,7 +22,7 @@ mission.reward =
 
 mission.sections =
 {
-    -- Go to Sauromugue Champaign (S) and check the Bulwark Gate at (F-6). You will receive Key ItemUnderpass Hatch Key after a long cutscene.
+    -- Go to Sauromugue Champaign (S) and check the Bulwark Gate at (F-6). You will receive Underpass Hatch Key after a long cutscene.
     -- Windower Alert:
     --
     -- Disable fastCS during this cutscene it will freeze at this time.
@@ -33,7 +33,7 @@ mission.sections =
 
         [xi.zone.SAUROMUGUE_CHAMPAIGN_S] =
         {
-            ['Raustigne'] =
+            ['Bulwark_Gate'] =
             {
                 onTrigger = function(player, npc)
                     -- TODO: What are these args from caps?

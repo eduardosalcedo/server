@@ -7,6 +7,7 @@
 -- Radford     : !pos -205.303 -8.000 26.874 87
 -----------------------------------
 require('scripts/globals/items')
+require('scripts/globals/keyitems')
 require('scripts/globals/missions')
 require('scripts/globals/interaction/mission')
 require('scripts/globals/zone')
@@ -16,14 +17,9 @@ local mission = Mission:new(xi.mission.log_id.WOTG, xi.mission.id.wotg.AFFAIRS_O
 
 mission.reward =
 {
+    keyItem = xi.ki.COUNT_BORELS_LETTER,
     nextMission = { xi.mission.log_id.WOTG, xi.mission.id.wotg.BORNE_BY_THE_WIND },
 }
-
-local tryComplete = function(player, mission)
-    -- If both are done:
-    -- Obtained key item: Count Borel's letter
-    -- Complete mission
-end
 
 mission.sections =
 {
@@ -32,9 +28,11 @@ mission.sections =
     -- Radford (H-6) in Bastok Markets (S)
 
     -- When you finish both cutscenes, you will be given Count Borel's letter and begin the next mission.
+
+    -- 0. Speak to one of the nations first
     {
         check = function(player, currentMission, missionStatus, vars)
-            return currentMission == mission.missionId
+            return currentMission == mission.missionId and missionStatus == 0
         end,
 
         [xi.zone.WINDURST_WATERS_S] =
@@ -43,16 +41,15 @@ mission.sections =
             {
                 onTrigger = function(player, npc)
                     -- TODO: What are these args from caps?
-                    return mission:progressEvent(179, 2, 0, 1)
+                    return mission:progressEvent(178, 2, 0, 1)
                 end,
-
-                -- TODO: Reminder?
             },
 
             onEventFinish =
             {
-                [179] = function(player, csid, option, npc)
-                    tryComplete(player, mission)
+                [178] = function(player, csid, option, npc)
+                    player:setCharVar("[WOTG12]WindurstFirst", 1)
+                    player:setMissionStatus(mission.areaId, 1)
                 end,
             },
         },
@@ -63,17 +60,75 @@ mission.sections =
             {
                 onTrigger = function(player, npc)
                     -- TODO: What are these args from caps?
-                    return mission:progressEvent(175, 2, 27, 0, 0, 0, 0, 1, 4095)
+                    print("B1")
+                   return mission:progressEvent(175, 2, 27, 0, 0, 0, 0, 1, 4095)
                 end,
-
-                -- TODO: After speaking:
-                -- CS: 177, 87, 55, 0, 0, 0, 0, 1, 4095
             },
 
             onEventFinish =
             {
                 [175] = function(player, csid, option, npc)
-                    tryComplete(player, mission)
+                    player:setMissionStatus(mission.areaId, 1)
+                end,
+            },
+        },
+    },
+
+    -- 1. Speak to the other one of the nations, ends the mission
+    {
+        check = function(player, currentMission, missionStatus, vars)
+            return currentMission == mission.missionId and missionStatus == 1
+        end,
+
+        [xi.zone.WINDURST_WATERS_S] =
+        {
+            ['Velda-Galda'] =
+            {
+                onTrigger = function(player, npc)
+                    local windurstFirst = player:getCharVar("[WOTG12]WindurstFirst") == 1
+                    if windurstFirst then
+                        -- TODO:Reminder
+                        return mission:progressEvent(180, 2, 0, 1)
+                    else
+                        -- Progress
+                        return mission:progressEvent(179, 2, 0, 1)
+                    end
+                end,
+            },
+
+            onEventFinish =
+            {
+                [179] = function(player, csid, option, npc)
+                    if mission:complete(player) then
+                        player:setCharVar("[WOTG12]WindurstFirst", 0)
+                    end
+                end,
+            },
+        },
+
+        [xi.zone.BASTOK_MARKETS_S] =
+        {
+            ['Radford'] =
+            {
+                onTrigger = function(player, npc)
+                    print("B2")
+                    local bastokFirst = player:getCharVar("[WOTG12]WindurstFirst") == 0
+                    if bastokFirst then
+                        -- Reminder
+                        return mission:progressEvent(177, 87, 55, 0, 0, 0, 0, 1, 4095)
+                    else
+                        -- Progress
+                        return mission:progressEvent(176, 2, 0, 1)
+                    end
+                end,
+            },
+
+            onEventFinish =
+            {
+                [176] = function(player, csid, option, npc)
+                    if mission:complete(player) then
+                        player:setCharVar("[WOTG12]WindurstFirst", 0)
+                    end
                 end,
             },
         },
