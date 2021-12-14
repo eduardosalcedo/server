@@ -179,7 +179,7 @@ mission.sections =
                     else
                         local mob = GetMobByID(17203677) --presentJugnerID.mob.CERNUNNOS)
                         if not mob:isSpawned() then
-                            player:messageSpecial(presentJugnerID.text.DRAWN_UNWANTED_ATTENTION) -- TODO: Wrong
+                            player:messageSpecial(presentJugnerID.text.DRAWN_UNWANTED_ATTENTION)
                             SpawnMob(17203677):updateClaim(player)
                         end
                     end
@@ -208,7 +208,6 @@ mission.sections =
             ['Humus-rich_Earth'] =
             {
                 onTrigger = function(player, npc)
-                    -- TODO: This is wrong
                     return mission:messageSpecial(presentJugnerID.text.DELIVER_TO_AMAURE)
                 end,
             },
@@ -226,14 +225,16 @@ mission.sections =
             onEventFinish =
             {
                 [939] = function(player, csid, option, npc)
-                    -- TODO: Remove KI
+                    player:delLeyItem(xi.ki.CERNUNNOS_RESIN)
                     player:setMissionStatus(mission.areaId, 6)
+                    player:setCharVar("[WOTG10]Wait", getVanaMidnight())
                 end,
             },
         },
     },
 
     -- 6. Wait until the next game day, zone, and talk to her again for a cutscene and the Bottle of Treant Tonic.
+    -- If you talk to her too soon, you must zone before trying again. Talking to her at exactly 0:00 will reset the clock.
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and missionStatus == 6
@@ -243,9 +244,13 @@ mission.sections =
         {
             ['Amaura'] =
             {
-                -- TODO: Check 940
                 onTrigger = function(player, npc)
-                    return mission:progressEvent(941, 0, 2964, 3585, 4416) -- TODO: What is this?
+                    if  os.time() > player:getCharVar("[WOTG10]Wait") then -- The next day
+                        return mission:progressEvent(941, 0, 2964, 3585, 4416) -- TODO: What is this?
+                    else -- Reset the timer (brutal)
+                        player:setCharVar("[WOTG10]Wait", getVanaMidnight())
+                        return mission:progressEvent(940)
+                    end
                 end,
             },
 
@@ -257,9 +262,6 @@ mission.sections =
             },
         },
     },
-
-    -- TODO:
-    -- 7. If you talk to her too soon, you must zone before trying again. Talking to her at exactly 0:00 will reset the clock.
 }
 
 return mission
