@@ -102,7 +102,6 @@ zones[xi.zone.JUGNER_FOREST] =
             17203867,
             17203868,
         },
-        HUMUS_RICH_EARTH = 17203888,
     },
 }
 
