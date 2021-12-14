@@ -60,7 +60,6 @@ mission.sections =
             {
                 onTrigger = function(player, npc)
                     -- TODO: What are these args from caps?
-                    print("B1")
                    return mission:progressEvent(175, 2, 27, 0, 0, 0, 0, 1, 4095)
                 end,
             },
@@ -111,7 +110,6 @@ mission.sections =
             ['Radford'] =
             {
                 onTrigger = function(player, npc)
-                    print("B2")
                     local bastokFirst = player:getCharVar("[WOTG12]WindurstFirst") == 0
                     if bastokFirst then
                         -- Reminder
