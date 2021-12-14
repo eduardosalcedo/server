@@ -4,7 +4,7 @@
 require("modules/module_utils")
 require("scripts/missions/wotg/helpers")
 -----------------------------------
-local m = Module:new("wotg_decouple_mission_nation_quests")
+local m = Module:new("wotg_decouple_story_missions_from_nation_quests")
 m:setEnabled(false)
 
 m:addOverride("xi.wotg.helpers.meetsMission3Reqs", function(player)
