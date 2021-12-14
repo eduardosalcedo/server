@@ -2,8 +2,8 @@
 -- Daughter of a Knight
 -- Wings of the Goddess Mission 10
 -----------------------------------
--- !addmission 5 10
--- Amaura                     : !pos -84.367 -6.949 91.148 229
+-- !addmission 5 9
+-- Amaura                     : !pos -84.367 -6.949 91.148 230
 -- CERNUNNOS_BULB             : !additem 2728
 -- Humus-rich Earth (past)    : !pos -510.535 7.568 289.283 82
 -- Humus-rich Earth (present) : !pos -510.535 7.568 289.283 104
@@ -21,6 +21,7 @@ local mission = Mission:new(xi.mission.log_id.WOTG, xi.mission.id.wotg.DAUGHTER_
 
 mission.reward =
 {
+    keyItem = xi.ki.BOTTLE_OF_TREANT_TONIC,
     nextMission = { xi.mission.log_id.WOTG, xi.mission.id.wotg.A_SPOONFUL_OF_SUGAR },
 }
 
@@ -37,7 +38,8 @@ mission.sections =
             ['Amaura'] =
             {
                 onTrigger = function(player, npc)
-                    return mission:progressEvent(935, 0, 2) -- TODO: What is this 2?
+                    -- TODO: What are these args from caps?
+                    return mission:progressEvent(935, 0, 2)
                 end,
             },
 
@@ -62,19 +64,21 @@ mission.sections =
             {
                 onTrade = function(player, npc, trade)
                     if npcUtil.tradeHasExactly(trade, xi.items.CERNUNNOS_BULB) then
+                        -- TODO: What are these args from caps?
                         return mission:progressEvent(937, 0, 2)
                     end
                 end,
 
-                -- TODO: Is 936 a reminder?
-                -- onTrigger = function(player, npc)
-                -- end,
+                onTrigger = function(player, npc)
+                    -- Reminder
+                    return mission:event(936)
+                end,
             },
 
             onEventFinish =
             {
                 [937] = function(player, csid, option, npc)
-                    player:confirmTrade()
+                    -- NOTE: We don't complete the trade, the player needs to keep the CERNUNNOS_BULB
                     player:setMissionStatus(mission.areaId, 2)
                 end,
             },
@@ -89,21 +93,33 @@ mission.sections =
             return currentMission == mission.missionId and missionStatus == 2
         end,
 
+        [xi.zone.SOUTHERN_SAN_DORIA] =
+        {
+            -- Reminder
+            ['Amaura'] =
+            {
+                onTrigger = function(player, npc)
+                    -- Reminder
+                    return mission:event(938)
+                end,
+            },
+        },
+
         [xi.zone.JUGNER_FOREST_S] =
         {
             ['Humus-rich_Earth'] =
             {
                 onTrade = function(player, npc, trade)
                     if npcUtil.tradeHasExactly(trade, xi.items.CERNUNNOS_BULB) then
-                        -- TODO: You plant a Cernunnon bulb.
                         player:confirmTrade()
                         player:setMissionStatus(mission.areaId, 3)
+                        return mission:messageSpecial(pastJugnerID.text.YOU_PLANT_ITEM, xi.items.CERNUNNOS_BULB)
                     end
                 end,
 
-                -- TODO: messageSpecial: "This seems like an ideal place to plant a Cernunnos bulb."
-                --onTrigger = function(player, npc)
-                --end,
+                onTrigger = function(player, npc)
+                    return mission:messageSpecial(pastJugnerID.text.IDEAL_PLACE_TO_PLANT_ITEM, xi.items.CERNUNNOS_BULB)
+                end,
             },
         },
     },
@@ -116,6 +132,18 @@ mission.sections =
 
         [xi.zone.JUGNER_FOREST_S] =
         {
+            ['Humus-rich_Earth'] =
+            {
+                -- Reminder
+                onTrigger = function(player, npc)
+                    return mission:messageSpecial(pastJugnerID.text.ITEM_IS_PLANTED_HERE, xi.items.CERNUNNOS_BULB)
+                end,
+            }
+        },
+
+        [xi.zone.JUGNER_FOREST] =
+        {
+            -- TODO: This has shifted and appears as "Field Manual"
             ['Humus-rich_Earth'] =
             {
                 onTrigger = function(player, npc)
@@ -133,60 +161,55 @@ mission.sections =
     },
 
     -- 4. Examine it again to fight the Cernunnos NM.
+    --    Once Cernunnos is defeated, check the "Humus-rich Earth" again for a cutscene and Cernunnos Resin.
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and missionStatus == 4
         end,
 
-        [xi.zone.JUGNER_FOREST_S] =
+        [xi.zone.JUGNER_FOREST] =
         {
             ['Humus-rich_Earth'] =
             {
                 onTrigger = function(player, npc)
-                    -- Message: Your presence has drawn unwanted attention! (11924)
-                    -- Spawn Cernunnos (13000hp)
-                    return mission:progressEvent(33, 104, 0, 0, 53) -- TODO: What is this?
-                end,
-            },
-        },
-    },
-
-    -- 5. Once Cernunnos is defeated, check the "Humus-rich Earth" again for a cutscene and Cernunnos Resin.
-    {
-        check = function(player, currentMission, missionStatus, vars)
-            return currentMission == mission.missionId and missionStatus == 5
-        end,
-
-        [xi.zone.JUGNER_FOREST_S] =
-        {
-            ['Humus-rich_Earth'] =
-            {
-                onTrigger = function(player, npc)
-                    return mission:progressEvent(34, 104, 300, 200, 100, 0, 1648, 0, 0) -- TODO: What is this?
+                    if player:getLocalVar("CERNUNNOS_DEFEATED") == 1 then
+                        -- TODO: This CS looks strange, the Treant is blocking the camera...
+                        return mission:progressEvent(34, 104, 300, 200, 100, 0, 1648, 0, 0) -- TODO: What is this?
+                    else
+                        local mob = GetMobByID(17203677) --presentJugnerID.mob.CERNUNNOS)
+                        if not mob:isSpawned() then
+                            player:messageSpecial(presentJugnerID.text.DRAWN_UNWANTED_ATTENTION) -- TODO: Wrong
+                            SpawnMob(17203677):updateClaim(player)
+                        end
+                    end
                 end,
             },
 
             onEventFinish =
             {
                 [34] = function(player, csid, option, npc)
-                    -- Obtained key item: Cernunnos resin.
-                    player:setMissionStatus(mission.areaId, 6)
+                    npcUtil.giveKeyItem(player, xi.ki.CERNUNNOS_RESIN)
+                    player:setLocalVar("CERNUNNOS_DEFEATED", 0)
+                    player:setMissionStatus(mission.areaId, 5)
                 end,
             },
         },
     },
 
-    -- 6. Go back to Southern San d'Oria talk to Amaura for a cutscene.
+    -- 5. Go back to Southern San d'Oria talk to Amaura for a cutscene.
     {
         check = function(player, currentMission, missionStatus, vars)
-            return currentMission == mission.missionId and missionStatus == 6
+            return currentMission == mission.missionId and missionStatus == 5
         end,
 
-        [xi.zone.JUGNER_FOREST_S] =
+        [xi.zone.JUGNER_FOREST] =
         {
             ['Humus-rich_Earth'] =
             {
-                -- Reminder: You must deliver the Cernunnos resin to Amaura in S.Sandoria
+                onTrigger = function(player, npc)
+                    -- TODO: This is wrong
+                    return mission:messageSpecial(presentJugnerID.text.DELIVER_TO_AMAURE)
+                end,
             },
         },
 
@@ -194,7 +217,6 @@ mission.sections =
         {
             ['Amaura'] =
             {
-                -- TODO: Check 938
                 onTrigger = function(player, npc)
                     return mission:progressEvent(939, 0, 0, 0, 31, 0, 0, 1) -- TODO: What is this?
                 end,
@@ -203,16 +225,17 @@ mission.sections =
             onEventFinish =
             {
                 [939] = function(player, csid, option, npc)
-                    player:setMissionStatus(mission.areaId, 1)
+                    -- TODO: Remove KI
+                    player:setMissionStatus(mission.areaId, 6)
                 end,
             },
         },
     },
 
-    -- 7. Wait until the next game day, zone, and talk to her again for a cutscene and the Bottle of Treant Tonic.
+    -- 6. Wait until the next game day, zone, and talk to her again for a cutscene and the Bottle of Treant Tonic.
     {
         check = function(player, currentMission, missionStatus, vars)
-            return currentMission == mission.missionId and missionStatus == 7
+            return currentMission == mission.missionId and missionStatus == 6
         end,
 
         [xi.zone.SOUTHERN_SAN_DORIA] =
@@ -228,16 +251,14 @@ mission.sections =
             onEventFinish =
             {
                 [941] = function(player, csid, option, npc)
-                    -- Obtain key item: Bottle of treant tonic
-                    -- Complete mission
-                    player:setMissionStatus(mission.areaId, 1)
+                    mission:complete(player)
                 end,
             },
         },
     },
 
     -- TODO:
-    -- 8. If you talk to her too soon, you must zone before trying again. Talking to her at exactly 0:00 will reset the clock.
+    -- 7. If you talk to her too soon, you must zone before trying again. Talking to her at exactly 0:00 will reset the clock.
 }
 
 return mission
