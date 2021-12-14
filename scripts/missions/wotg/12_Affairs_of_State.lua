@@ -41,7 +41,7 @@ mission.sections =
             {
                 onTrigger = function(player, npc)
                     -- TODO: What are these args from caps?
-                    return mission:progressEvent(178, 2, 0, 1)
+                    return mission:progressEvent(178, 2, 2)
                 end,
             },
 
@@ -86,8 +86,8 @@ mission.sections =
                 onTrigger = function(player, npc)
                     local windurstFirst = player:getCharVar("[WOTG12]WindurstFirst") == 1
                     if windurstFirst then
-                        -- TODO:Reminder
-                        return mission:progressEvent(180, 2, 0, 1)
+                        -- Reminder
+                        return mission:progressEvent(180, 94, 7)
                     else
                         -- Progress
                         return mission:progressEvent(179, 2, 0, 1)
@@ -116,7 +116,7 @@ mission.sections =
                         return mission:progressEvent(177, 87, 55, 0, 0, 0, 0, 1, 4095)
                     else
                         -- Progress
-                        return mission:progressEvent(176, 2, 0, 1)
+                        return mission:progressEvent(176, 2, 75, 1, 0, 0, 0, 4095, 0)
                     end
                 end,
             },
